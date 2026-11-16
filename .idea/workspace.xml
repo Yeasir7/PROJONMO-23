@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="fa5c8543-4b42-4282-b3cc-1a37a08c2f40" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/campus-gather-frontend/next.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/campus-gather-frontend/next.config.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/campus-gather-frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/campus-gather-frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/campus-gather-frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/campus-gather-frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/campus-gather-frontend/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/campus-gather-frontend/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/campus-gather-frontend/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/campus-gather-frontend/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/campus-gather-frontend/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/campus-gather-frontend/src/app/page.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DatabaseLocalColorSettings">
+    <colors>
+      <entry key="1cca9b53-13e0-412d-94fe-a7fdeec443e2" value="" />
+    </colors>
+  </component>
+  <component name="DevoxxGenieProjectScanSettings">
+    <option name="useGitIgnore" value="true" />
+    <option name="excludeJavaDoc" value="false" />
+    <option name="excludedDirectories">
+      <list>
+        <option value="build" />
+        <option value=".git" />
+        <option value="bin" />
+        <option value="out" />
+        <option value="target" />
+        <option value="node_modules" />
+        <option value=".idea" />
+      </list>
+    </option>
+    <option name="excludedFiles">
+      <list>
+        <option value="package-lock.json" />
+        <option value="yarn.lock" />
+        <option value=".env" />
+        <option value="build.gradle" />
+        <option value="settings.gradle" />
+      </list>
+    </option>
+    <option name="includedFileExtensions">
+      <list>
+        <option value="java" />
+        <option value="kt" />
+        <option value="groovy" />
+        <option value="scala" />
+        <option value="xml" />
+        <option value="json" />
+        <option value="yaml" />
+        <option value="yml" />
+        <option value="properties" />
+        <option value="txt" />
+        <option value="md" />
+        <option value="js" />
+        <option value="ts" />
+        <option value="css" />
+        <option value="scss" />
+        <option value="html" />
+      </list>
+    </option>
+    <option name="ragExcludedDirectories">
+      <list />
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/campus-gather-frontend" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0377876940109363" />
+      <entry key="MS500" value="1.738519357552817" />
+      <entry key="S2" value="3.281613793533392" />
+      <entry key="S5" value="4.626811894537456" />
+      <entry key="S10" value="5.6905720202033265" />
+      <entry key="S30" value="6.993080585539485" />
+      <entry key="S60" value="7.456777214793458" />
+      <entry key="M2" value="7.717460842834046" />
+      <entry key="M5" value="7.884223370350951" />
+      <entry key="M10" value="7.941639459819134" />
+      <entry key="M15" value="7.96098712062227" />
+      <entry key="M30" value="7.980440403652027" />
+      <entry key="H1" value="7.990206869283022" />
+      <entry key="H2" value="7.995100096067238" />
+      <entry key="H4" value="7.997549212709215" />
+      <entry key="D1" value="7.999591419376423" />
+      <entry key="W1" value="7.999941628496079" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="3.234396761531048E-7" />
+      <entry key="MS500" value="0.050345496263704693" />
+      <entry key="S2" value="0.49553841159242235" />
+      <entry key="S5" value="0.9583189536902212" />
+      <entry key="S10" value="1.326670803048075" />
+      <entry key="S30" value="1.7264053688565653" />
+      <entry key="S60" value="1.8557409040912707" />
+      <entry key="M2" value="1.925888232661611" />
+      <entry key="M5" value="1.9698637470620357" />
+      <entry key="M10" value="1.98484859355527" />
+      <entry key="M15" value="1.989880453908306" />
+      <entry key="M30" value="1.9949308971385324" />
+      <entry key="H1" value="1.9974631113055619" />
+      <entry key="H2" value="1.9987309707345187" />
+      <entry key="H4" value="1.9993653390623318" />
+      <entry key="D1" value="1.9998942028505267" />
+      <entry key="W1" value="1.9999848856236284" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="1.0024365163853026" />
+      <entry key="MS500" value="1.7223304495596718" />
+      <entry key="S2" value="3.5002648589875567" />
+      <entry key="S5" value="5.271006671545747" />
+      <entry key="S10" value="6.7402075568064825" />
+      <entry key="S30" value="8.57336124675844" />
+      <entry key="S60" value="9.22978304443228" />
+      <entry key="M2" value="9.599268571604947" />
+      <entry key="M5" value="9.83576218051073" />
+      <entry key="M10" value="9.917206484870638" />
+      <entry key="M15" value="9.944653119065983" />
+      <entry key="M30" value="9.97225063174259" />
+      <entry key="H1" value="9.986106272596963" />
+      <entry key="H2" value="9.993048367791395" />
+      <entry key="H4" value="9.996522990806445" />
+      <entry key="D1" value="9.999420332679142" />
+      <entry key="W1" value="9.99991718632154" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3M5g3nzCHVtLTokd3ZPXGiGHrbZ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/USER/OneDrive/Documents/campus-gather&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.AcpAgentsConfigurable&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\USER\\OneDrive\\Documents\\campus-gather\\campus-gather-backend\\node_modules\\typescript\\lib&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-WS-262.10968.77" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fa5c8543-4b42-4282-b3cc-1a37a08c2f40" name="Changes" comment="" />
+      <created>1794645649203</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1794645649203</updated>
+      <workItem from="1794645649720" duration="10180000" />
+      <workItem from="1794683988318" duration="1045000" />
+      <workItem from="1794717490569" duration="9536000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

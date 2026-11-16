@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  CONVENOR
+  CR
+  STUDENT
+}
+
+enum TshirtSize {
+  S
+  M
+  L
+  XL
+  XXL
+}
+
+enum FestFeeStatus {
+  UNPAID
+  PAID_TO_CR
+}
+
+enum HandoverStatus {
+  PENDING
+  VERIFIED
+}
+
+enum SegmentPaymentStatus {
+  FREE
+  PENDING
+  PAID
+}
+
+enum ParticipationType {
+  SOLO
+  TEAM
+}
+
+enum InflowCategory {
+  SPONSOR
+  DEPT_FUND
+  OTHER
+}
+
+model Section {
+  id          Int            @id @default(autoincrement())
+  semester    Int // e.g. 1 to 8
+  sectionName String // e.g. "A", "B", "C" ... "J"
+  code        String         @unique // e.g. "8A", "7J"
+  festFee     Int            @default(0)
+  users       User[]
+  handovers   CashHandover[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("sections")
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  name          String
+  email         String        @unique
+  password      String
+  studentId     String?       @unique // Roll (null for Sirs)
+  phone         String?
+  tshirtSize    TshirtSize    @default(L)
+  role          Role          @default(STUDENT)
+  sectionId     Int?
+  section       Section?      @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  festFeeStatus FestFeeStatus @default(UNPAID)
+  paidAmount    Int           @default(0)
+  kitDelivered  Boolean       @default(false)
+  passwordResetLastSentAt DateTime?
+
+  // Relations
+  crHandovers       CashHandover[]        @relation("CRHandovers")
+  receivedHandovers CashHandover[]        @relation("ConvenorHandovers")
+  committeeMembers  CommitteeMember[]
+  loggedExpenses    Expense[]
+  receivedInflows   FundInflow[]
+  registrations     SegmentRegistration[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sectionId])
+  @@index([role])
+  @@index([festFeeStatus])
+  @@map("users")
+}
+
+model CashHandover {
+  id           Int            @id @default(autoincrement())
+  sectionId    Int
+  section      Section        @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  crId         Int
+  cr           User           @relation("CRHandovers", fields: [crId], references: [id], onDelete: Cascade)
+  receivedById Int
+  receivedBy   User           @relation("ConvenorHandovers", fields: [receivedById], references: [id], onDelete: Cascade)
+  amount       Int
+  status       HandoverStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime       @default(now())
+
+  @@index([sectionId])
+  @@index([crId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("cash_handovers")
+}
+
+model Committee {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique // 13 teams from PDF
+  description     String?
+  allocatedBudget Int               @default(0)
+  members         CommitteeMember[]
+  expenses        Expense[]
+  createdAt       DateTime          @default(now())
+
+  @@map("committees")
+}
+
+model CommitteeMember {
+  id          Int       @id @default(autoincrement())
+  committeeId Int
+  committee   Committee @relation(fields: [committeeId], references: [id], onDelete: Cascade)
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  designation String    @default("MEMBER") // "LEAD" | "MEMBER"
+
+  @@unique([committeeId, userId])
+  @@map("committee_members")
+}
+
+model Expense {
+  id          Int       @id @default(autoincrement())
+  committeeId Int
+  committee   Committee @relation(fields: [committeeId], references: [id], onDelete: Cascade)
+  spentById   Int
+  spentBy     User      @relation(fields: [spentById], references: [id], onDelete: Cascade)
+  itemTitle   String // e.g. "Kacchi advance", "Stage banners"
+  amount      Int
+  voucherNote String?
+  createdAt   DateTime  @default(now())
+
+  @@index([committeeId])
+  @@index([spentById])
+  @@index([createdAt])
+  @@map("expenses")
+}
+
+model FundInflow {
+  id           Int            @id @default(autoincrement())
+  sourceTitle  String // e.g. "XYZ Software Ltd Sponsor"
+  category     InflowCategory @default(SPONSOR)
+  amount       Int
+  receivedById Int
+  receivedBy   User           @relation(fields: [receivedById], references: [id], onDelete: Cascade)
+  notes        String?
+  createdAt    DateTime       @default(now())
+
+  @@index([category])
+  @@index([receivedById])
+  @@index([createdAt])
+  @@map("fund_inflows")
+}
+
+model Segment {
+  id                Int                   @id @default(autoincrement())
+  title             String // e.g. "Speed Coding", "eFootball"
+  category          String // "Programming", "Gaming", "Showcase"
+  participationType ParticipationType     @default(SOLO)
+  registrationFee   Int                   @default(0)
+  maxCapacity       Int                   @default(50)
+  seatsLeft         Int                   @default(50)
+  description       String?
+  registrations     SegmentRegistration[]
+  createdAt         DateTime              @default(now())
+
+  @@map("segments")
+}
+
+model SegmentRegistration {
+  id            Int                  @id @default(autoincrement())
+  segmentId     Int
+  segment       Segment              @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  userId        Int
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  teamOrDetails String? // e.g. Team Name or gamer handle
+  paymentStatus SegmentPaymentStatus @default(FREE)
+  registeredAt  DateTime             @default(now())
+
+  @@unique([segmentId, userId])
+  @@index([userId])
+  @@index([paymentStatus])
+  @@index([registeredAt])
+  @@map("segment_registrations")
+}
+
+model AllowedStudent {
+  id        Int     @id @default(autoincrement())
+  studentId String  @unique
+  fullName  String
+  isClaimed Boolean @default(false)
+
+  @@map("allowed_students")
+}
+
