@@ -20,7 +20,7 @@ import type {
 } from "@/types/fest";
 
 export const api = axios.create({
-  baseURL: "/api/v1",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "/api/v1",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
