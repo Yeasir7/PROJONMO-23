@@ -15,6 +15,7 @@ interface EnvConfig {
     JWT_REFRESH_EXPIRES_IN: string;
     BREVO_API_KEY: string;
     BREVO_SENDER_EMAIL: string;
+    GOOGLE_CLIENT_ID: string;
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -49,6 +50,7 @@ const loadEnvVariables = (): EnvConfig => {
         JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN as string,
         BREVO_API_KEY: (process.env.BREVO_API_KEY || "") as string,
         BREVO_SENDER_EMAIL: (process.env.BREVO_SENDER_EMAIL || "") as string,
+        GOOGLE_CLIENT_ID: (process.env.GOOGLE_CLIENT_ID || "") as string,
     };
 };
 

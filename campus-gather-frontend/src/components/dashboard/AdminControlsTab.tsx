@@ -14,6 +14,10 @@ import {
   CreditCard,
   Building,
   Check,
+  RotateCcw,
+  Trash2,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 import { usersApi, sectionsApi, analyticsApi, getApiErrorMessage } from "@/lib/api";
 import type { User, Role, FestFeeStatus } from "@/types/fest";
@@ -41,6 +45,10 @@ export function AdminControlsTab({ currentUser }: { currentUser: User }) {
   // Semester fee editing state
   const [editingSemester, setEditingSemester] = useState<number | null>(null);
   const [semesterFeeInput, setSemesterFeeInput] = useState<string>("");
+
+  // Admin Safety Valves states
+  const [resetConfirmUser, setResetConfirmUser] = useState<User | null>(null);
+  const [revertFeeConfirmUser, setRevertFeeConfirmUser] = useState<User | null>(null);
 
   // Queries
   const { data: usersResponse, isLoading: usersLoading } = useQuery({
@@ -97,6 +105,39 @@ export function AdminControlsTab({ currentUser }: { currentUser: User }) {
     },
     onError: (err) => {
       toast.error(getApiErrorMessage(err, "Failed to update user role"));
+    },
+  });
+
+  const updateFeeStatusMutation = useMutation({
+    mutationFn: ({ userId, festFeeStatus }: { userId: number; festFeeStatus: FestFeeStatus }) =>
+      usersApi.updateFeeStatus(userId, { festFeeStatus }),
+    onSuccess: (updated) => {
+      toast.success(
+        `Updated fee status for ${updated.name}: ${
+          updated.festFeeStatus === "PAID_TO_CR" ? "Paid" : "Unpaid"
+        }`
+      );
+      setRevertFeeConfirmUser(null);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "Failed to update fee status"));
+    },
+  });
+
+  const resetAccountMutation = useMutation({
+    mutationFn: (userId: number) => usersApi.resetAccount(userId),
+    onSuccess: (res) => {
+      toast.success(
+        res.message || "Student account reset successfully. Student ID is now available for registration."
+      );
+      setResetConfirmUser(null);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "Failed to reset student account"));
     },
   });
 
@@ -376,6 +417,7 @@ export function AdminControlsTab({ currentUser }: { currentUser: User }) {
                   <th className="py-3 px-4">Role</th>
                   <th className="py-3 px-4">Fee Status</th>
                   <th className="py-3 px-4">T-Shirt</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -463,23 +505,71 @@ export function AdminControlsTab({ currentUser }: { currentUser: User }) {
                         })()}
                       </td>
 
-                      {/* Fee Status Badge */}
+                      {/* Fee Status Badge & Toggle */}
                       <td className="py-3 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                            isPaid
-                              ? "bg-emerald-50 text-[#059669] border border-emerald-200"
-                              : "bg-amber-50 text-[#D97706] border border-amber-200"
-                          }`}
-                        >
-                          <CheckCircle2 className="w-3 h-3" />
-                          {u.festFeeStatus}
-                        </span>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1.5">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                              isPaid
+                                ? "bg-emerald-50 text-[#059669] border border-emerald-200"
+                                : "bg-amber-50 text-[#D97706] border border-amber-200"
+                            }`}
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            {u.festFeeStatus}
+                          </span>
+
+                          {(isSuperAdmin || (currentUser.role === "CR" && u.sectionId === currentUser.sectionId)) && (
+                            isPaid ? (
+                              <button
+                                type="button"
+                                disabled={updateFeeStatusMutation.isPending}
+                                onClick={() => setRevertFeeConfirmUser(u)}
+                                className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 cursor-pointer transition-colors"
+                                title="Revert fee status back to UNPAID"
+                              >
+                                Revert to Unpaid
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={updateFeeStatusMutation.isPending}
+                                onClick={() =>
+                                  updateFeeStatusMutation.mutate({
+                                    userId: u.id,
+                                    festFeeStatus: "PAID_TO_CR",
+                                  })
+                                }
+                                className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-pointer transition-colors"
+                              >
+                                Mark Paid
+                              </button>
+                            )
+                          )}
+                        </div>
                       </td>
 
                       {/* T-Shirt */}
                       <td className="py-3 px-4 font-mono font-semibold">
                         {u.tshirtSize}
+                      </td>
+
+                      {/* Actions Column: Reset Student Account for SUPER_ADMIN */}
+                      <td className="py-3 px-4 text-right">
+                        {isSuperAdmin && u.role !== "SUPER_ADMIN" ? (
+                          <button
+                            type="button"
+                            disabled={resetAccountMutation.isPending}
+                            onClick={() => setResetConfirmUser(u)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors cursor-pointer"
+                            title="Delete student account and release Student ID"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Reset Account
+                          </button>
+                        ) : (
+                          <span className="text-slate-300 text-xs">—</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -566,6 +656,117 @@ export function AdminControlsTab({ currentUser }: { currentUser: User }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: CONFIRM REVERT FEE STATUS (SUPER_ADMIN & SECTION CR) ── */}
+      {revertFeeConfirmUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-600">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <h3 className="font-bold text-slate-900 text-base">
+                  Revert Fee Status
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRevertFeeConfirmUser(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Are you sure you want to revert fee status for{" "}
+                <strong className="text-slate-900">{revertFeeConfirmUser.name}</strong>{" "}
+                ({revertFeeConfirmUser.studentId || revertFeeConfirmUser.email}) from{" "}
+                <span className="font-semibold text-emerald-600">PAID_TO_CR</span> back to{" "}
+                <span className="font-semibold text-amber-600">UNPAID</span>?
+              </p>
+              <p className="text-[11px] text-slate-500">
+                This will reset their paid amount to 0 BDT and unmark kit delivery.
+              </p>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-[#E2E8F0] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setRevertFeeConfirmUser(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={updateFeeStatusMutation.isPending}
+                onClick={() =>
+                  updateFeeStatusMutation.mutate({
+                    userId: revertFeeConfirmUser.id,
+                    festFeeStatus: "UNPAID",
+                  })
+                }
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {updateFeeStatusMutation.isPending ? "Reverting..." : "Confirm Revert to Unpaid"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: RESET STUDENT ACCOUNT (SUPER_ADMIN ONLY) ───────────── */}
+      {resetConfirmUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-[#E2E8F0] flex items-center justify-between">
+              <div className="flex items-center gap-2 text-rose-600">
+                <Trash2 className="w-5 h-5 shrink-0" />
+                <h3 className="font-bold text-slate-900 text-base">
+                  Reset Student Account
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResetConfirmUser(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Resetting <strong className="text-slate-900">{resetConfirmUser.name}</strong> (
+                {resetConfirmUser.studentId || resetConfirmUser.email}) will delete their account and allow this Student ID to register again. Continue?
+              </p>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800 space-y-1">
+                <div className="font-semibold">This safety valve will:</div>
+                <ul className="list-disc list-inside space-y-0.5">
+                  <li>Delete the user record and linked fest registrations</li>
+                  <li>Restore seatsLeft on each contest the student registered for</li>
+                  <li>Reset AllowedStudent.isClaimed = false so the roll can register freshly</li>
+                </ul>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-[#E2E8F0] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setResetConfirmUser(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={resetAccountMutation.isPending}
+                onClick={() => resetAccountMutation.mutate(resetConfirmUser.id)}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {resetAccountMutation.isPending ? "Resetting..." : "Confirm & Reset Account"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -68,9 +68,29 @@ const verifyHandover = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const deleteHandover = catchAsync(async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+        res.status(status.BAD_REQUEST).json({
+            success: false,
+            message: "Handover ID must be a valid number",
+        });
+        return;
+    }
+    const result = await CashHandoverService.deleteHandover(id, req.user);
+
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Cash handover rejected and deleted successfully",
+        data: result,
+    });
+});
+
 export const CashHandoverController = {
     createHandover,
     getAllHandovers,
     getHandoverById,
     verifyHandover,
+    deleteHandover,
 };

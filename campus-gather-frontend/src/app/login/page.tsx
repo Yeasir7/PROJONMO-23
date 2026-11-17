@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { ArrowRight, CheckCircle2, KeyRound, LogIn } from "lucide-react";
 import { authApi, usersApi, getApiErrorMessage } from "@/lib/api";
 import { Navbar } from "@/components/navbar";
@@ -29,6 +30,37 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      toast.error("Google authentication failed. No credential received.");
+      return;
+    }
+
+    setIsGoogleSubmitting(true);
+    try {
+      const response = await authApi.googleLogin(credentialResponse.credential);
+
+      if (response?.accessToken && typeof window !== "undefined") {
+        localStorage.setItem("accessToken", response.accessToken);
+        setHasToken(true);
+      }
+
+      queryClient.clear();
+      toast.success(`Welcome back, ${response.user?.name || "Participant"}!`);
+      router.push("/dashboard");
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(
+          err,
+          "No account found linked to this Google email. Please register with your Student ID first."
+        )
+      );
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  };
 
   // Forgot Password State
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -242,6 +274,37 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-200" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-slate-400 font-semibold tracking-wider text-[11px]">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="w-full flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() =>
+                toast.error("Google sign in was unsuccessful. Please try again.")
+              }
+              text="continue_with"
+              shape="rectangular"
+              size="large"
+              width="100%"
+            />
+          </div>
+
+          {isGoogleSubmitting && (
+            <div className="flex items-center justify-center gap-2 text-xs text-indigo-600 font-medium pt-3 animate-pulse">
+              <div className="size-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+              Signing in with Google...
+            </div>
+          )}
 
           <div className="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
             Need an account?{" "}

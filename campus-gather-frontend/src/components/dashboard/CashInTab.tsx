@@ -75,6 +75,27 @@ export function CashInTab({ currentUser }: { currentUser: User }) {
     },
   });
 
+  const deleteHandoverMutation = useMutation({
+    mutationFn: (id: number) => cashHandoversApi.delete(id),
+    onSuccess: () => {
+      toast.success("Pending cash handover rejected and deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["cashHandovers"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "Failed to reject cash handover"));
+    },
+  });
+
+  const handleRejectHandover = (h: any) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to reject and delete this pending handover #${h.id} of ${h.amount.toLocaleString()} BDT from ${h.cr?.name || "CR"}?`
+    );
+    if (confirmed) {
+      deleteHandoverMutation.mutate(h.id);
+    }
+  };
+
   const createInflowMutation = useMutation({
     mutationFn: (data: {
       sourceTitle: string;
@@ -378,15 +399,27 @@ export function CashInTab({ currentUser }: { currentUser: User }) {
                       </td>
                       <td className="py-3 px-3 text-right">
                         {isPending && canManage ? (
-                          <button
-                            type="button"
-                            disabled={verifyHandoverMutation.isPending}
-                            onClick={() => verifyHandoverMutation.mutate(h.id)}
-                            className="px-3 py-1.5 text-xs font-bold text-white bg-[#059669] hover:bg-emerald-700 rounded-xl transition-all shadow-2xs cursor-pointer flex items-center gap-1 ml-auto disabled:opacity-50"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Verify Cash
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5 ml-auto">
+                            <button
+                              type="button"
+                              disabled={verifyHandoverMutation.isPending || deleteHandoverMutation.isPending}
+                              onClick={() => verifyHandoverMutation.mutate(h.id)}
+                              className="px-3 py-1.5 text-xs font-bold text-white bg-[#059669] hover:bg-emerald-700 rounded-xl transition-all shadow-2xs cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Verify Cash
+                            </button>
+                            <button
+                              type="button"
+                              disabled={verifyHandoverMutation.isPending || deleteHandoverMutation.isPending}
+                              onClick={() => handleRejectHandover(h)}
+                              className="px-2.5 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all shadow-2xs cursor-pointer flex items-center gap-1 disabled:opacity-50"
+                              title="Reject and delete this pending handover"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              Reject
+                            </button>
+                          </div>
                         ) : isPending ? (
                           <span className="text-[11px] text-slate-400 italic">
                             Awaiting Convenor

@@ -117,6 +117,24 @@ const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const resetStudentAccount = catchAsync(async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+        res.status(status.BAD_REQUEST).json({
+            success: false,
+            message: "User ID must be a valid number",
+        });
+        return;
+    }
+    const result = await UserService.resetStudentAccount(id);
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "Student account reset successfully. Student ID is now available for registration.",
+        data: result,
+    });
+});
+
 export const UserController = {
     getMe,
     getAllUsers,
@@ -126,4 +144,5 @@ export const UserController = {
     whitelistStudent,
     updateKitStatus,
     updateMyProfile,
+    resetStudentAccount,
 };

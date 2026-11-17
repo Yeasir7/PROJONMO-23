@@ -154,6 +154,14 @@ export function CRCollectionTab({ currentUser }: { currentUser: User }) {
     }
     const newStatus: FestFeeStatus =
       student.festFeeStatus === "PAID_TO_CR" ? "UNPAID" : "PAID_TO_CR";
+
+    if (newStatus === "UNPAID") {
+      const confirmed = window.confirm(
+        `Are you sure you want to revert fee status for ${student.name} (${student.studentId || student.email}) back to UNPAID? This will reset their paid amount to 0 BDT.`
+      );
+      if (!confirmed) return;
+    }
+
     toggleFeeMutation.mutate({
       userId: student.id,
       festFeeStatus: newStatus,

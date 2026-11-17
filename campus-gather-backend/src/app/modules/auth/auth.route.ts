@@ -3,6 +3,8 @@ import { validateRequest } from "../../middleware/validateRequest.js";
 import { AuthController } from "./auth.controller.js";
 import {
     registerStudentZodSchema,
+    googleRegisterStudentZodSchema,
+    googleLoginZodSchema,
     loginZodSchema,
     refreshTokenZodSchema,
     forgotPasswordZodSchema,
@@ -19,9 +21,21 @@ router.post(
 );
 
 router.post(
+    "/google-register",
+    validateRequest(googleRegisterStudentZodSchema),
+    AuthController.googleRegisterStudent
+);
+
+router.post(
     "/login",
     validateRequest(loginZodSchema),
     AuthController.login
+);
+
+router.post(
+    "/google-login",
+    validateRequest(googleLoginZodSchema),
+    AuthController.googleLogin
 );
 
 router.post(

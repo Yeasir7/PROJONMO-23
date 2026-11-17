@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import status from "http-status";
 import { envVars } from "../../config/env.js";
+import AppError from "../../errorHelpers/AppError.js";
 import { catchAsync } from "../../shared/catchAsync.js";
 import { sendResponse } from "../../shared/sendResponse.js";
 import { CookieUtils } from "../../utils/cookie.js";
@@ -27,7 +28,20 @@ const verifyStudent = catchAsync(async (req: Request, res: Response) => {
 });
 
 const registerStudent = catchAsync(async (req: Request, res: Response) => {
-    const result = await AuthService.registerStudent(req.body);
+    if (!req.body.credential) {
+        throw new AppError(
+            status.UNAUTHORIZED,
+            "Direct registration is disabled. Google OAuth verification credential is required."
+        );
+    }
+    const result = await AuthService.googleRegisterStudent({
+        studentId: req.body.studentId,
+        credential: req.body.credential,
+        password: req.body.password,
+        phone: req.body.phone,
+        sectionId: Number(req.body.sectionId),
+        tshirtSize: req.body.tshirtSize,
+    });
     const { accessToken, refreshToken } = result;
 
     if (accessToken) {
@@ -42,6 +56,44 @@ const registerStudent = catchAsync(async (req: Request, res: Response) => {
         success: true,
         message: "Student registered successfully",
         data: result,
+    });
+});
+
+const googleRegisterStudent = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthService.googleRegisterStudent(req.body);
+    const { accessToken, refreshToken } = result;
+
+    if (accessToken) {
+        tokenUtils.setAccessTokenCookie(res, accessToken);
+    }
+    if (refreshToken) {
+        tokenUtils.setRefreshTokenCookie(res, refreshToken);
+    }
+
+    sendResponse(res, {
+        httpStatusCode: status.CREATED,
+        success: true,
+        message: "Student registered successfully with Google",
+        data: result,
+    });
+});
+
+const googleLogin = catchAsync(async (req: Request, res: Response) => {
+    const result = await AuthService.googleLogin(req.body);
+    const { accessToken, refreshToken, user } = result;
+
+    tokenUtils.setAccessTokenCookie(res, accessToken);
+    tokenUtils.setRefreshTokenCookie(res, refreshToken);
+
+    sendResponse(res, {
+        httpStatusCode: status.OK,
+        success: true,
+        message: "User logged in successfully with Google",
+        data: {
+            accessToken,
+            refreshToken,
+            user,
+        },
     });
 });
 
@@ -102,6 +154,8 @@ const forgotPassword = catchAsync(async (req: Request, res: Response) => {
 export const AuthController = {
     verifyStudent,
     registerStudent,
+    googleRegisterStudent,
+    googleLogin,
     login,
     refreshToken,
     logout,

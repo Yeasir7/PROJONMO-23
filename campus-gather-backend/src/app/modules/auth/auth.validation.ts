@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 export const registerStudentZodSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters long"),
-    email: z.string().email("Invalid email address"),
+    name: z.string().min(2, "Name must be at least 2 characters long").optional(),
+    email: z.string().email("Invalid email address").optional(),
+    credential: z.string().optional(),
     password: z
         .string({ error: "Password is required" })
         .min(6, "Password must be at least 6 characters long"),
@@ -10,10 +11,33 @@ export const registerStudentZodSchema = z.object({
         .string({ error: "Student ID is required" })
         .min(1, "Student ID is required"),
     phone: z.string({ error: "Phone is required" }).min(1, "Phone is required"),
-    sectionId: z.number().int("Section ID must be an integer"),
+    sectionId: z.coerce.number().int("Section ID must be an integer"),
     tshirtSize: z.enum(["S", "M", "L", "XL", "XXL"], {
         error: "T-shirt size must be one of: S, M, L, XL, XXL",
     }),
+});
+
+export const googleRegisterStudentZodSchema = z.object({
+    studentId: z
+        .string({ error: "Student ID is required" })
+        .min(1, "Student ID is required"),
+    credential: z
+        .string({ error: "Google credential is required" })
+        .min(1, "Google credential is required"),
+    password: z
+        .string({ error: "Password is required" })
+        .min(6, "Password must be at least 6 characters long"),
+    phone: z.string({ error: "Phone is required" }).min(1, "Phone is required"),
+    sectionId: z.coerce.number().int("Section ID must be an integer"),
+    tshirtSize: z.enum(["S", "M", "L", "XL", "XXL"], {
+        error: "T-shirt size must be one of: S, M, L, XL, XXL",
+    }),
+});
+
+export const googleLoginZodSchema = z.object({
+    credential: z
+        .string({ error: "Google credential is required" })
+        .min(1, "Google credential is required"),
 });
 
 export const loginZodSchema = z.object({
@@ -33,6 +57,8 @@ export const forgotPasswordZodSchema = z.object({
 
 export const AuthValidation = {
     registerStudentZodSchema,
+    googleRegisterStudentZodSchema,
+    googleLoginZodSchema,
     loginZodSchema,
     refreshTokenZodSchema,
     forgotPasswordZodSchema,

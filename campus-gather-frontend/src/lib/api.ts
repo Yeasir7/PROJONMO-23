@@ -116,6 +116,23 @@ export const authApi = {
       api.post("/auth/login", payload)
     ),
 
+  googleRegister: (payload: {
+    studentId: string;
+    credential: string;
+    password: string;
+    phone: string;
+    sectionId: number;
+    tshirtSize: string;
+  }) =>
+    unwrap<{ accessToken: string; refreshToken: string; user: User }>(
+      api.post("/auth/google-register", payload)
+    ),
+
+  googleLogin: (credential: string) =>
+    unwrap<{ accessToken: string; refreshToken: string; user: User }>(
+      api.post("/auth/google-login", { credential })
+    ),
+
   logout: () => unwrap<void>(api.post("/auth/logout")),
 
   refreshToken: (token?: string) =>
@@ -153,6 +170,11 @@ export const usersApi = {
     sectionId?: number;
     newPassword?: string;
   }) => unwrap<User>(api.patch("/users/me", payload)),
+
+  resetAccount: (id: number) =>
+    unwrap<{ id: number; studentId: string | null; name: string; message: string }>(
+      api.delete(`/users/${id}/reset`)
+    ),
 };
 
 // ─── SECTIONS APIS ─────────────────────────────────────────────────────────
@@ -182,6 +204,9 @@ export const cashHandoversApi = {
 
   verify: (id: number) =>
     unwrap<CashHandover>(api.patch(`/cash-handovers/${id}/verify`, { status: "VERIFIED" })),
+
+  delete: (id: number) =>
+    unwrap<{ id: number; message: string }>(api.delete(`/cash-handovers/${id}`)),
 };
 
 // ─── COMMITTEES APIS ───────────────────────────────────────────────────────

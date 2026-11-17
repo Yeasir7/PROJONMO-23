@@ -48,5 +48,11 @@ router.patch(
     UserController.updateFeeStatus,
 );
 
+router.delete(
+    "/:id/reset",
+    auth(Role.SUPER_ADMIN),
+    UserController.resetStudentAccount,
+);
+
 export const UserRoutes = router;
 export default router;

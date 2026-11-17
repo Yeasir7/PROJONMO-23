@@ -165,9 +165,31 @@ const verifyHandover = async (id: number) => {
     return handover;
 };
 
+const deleteHandover = async (
+    id: number,
+    requestingUser?: { userId: number; role: string }
+) => {
+    const handover = await prisma.cashHandover.findUnique({ where: { id } });
+    if (!handover) {
+        throw new AppError(status.NOT_FOUND, "Cash handover not found");
+    }
+
+    if (requestingUser?.role === Role.CR && handover.crId !== requestingUser.userId) {
+        throw new AppError(status.FORBIDDEN, "You can only cancel your own pending handovers");
+    }
+
+    if (handover.status !== HandoverStatus.PENDING) {
+        throw new AppError(status.BAD_REQUEST, "Only pending handovers can be rejected or cancelled");
+    }
+
+    await prisma.cashHandover.delete({ where: { id } });
+    return { id, message: "Cash handover rejected and deleted successfully" };
+};
+
 export const CashHandoverService = {
     createHandover,
     getAllHandovers,
     getHandoverById,
     verifyHandover,
+    deleteHandover,
 };

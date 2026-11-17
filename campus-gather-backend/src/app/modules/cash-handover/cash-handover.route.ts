@@ -33,5 +33,11 @@ router.patch(
     CashHandoverController.verifyHandover
 );
 
+router.delete(
+    "/:id",
+    auth(Role.SUPER_ADMIN, Role.CONVENOR, Role.CR),
+    CashHandoverController.deleteHandover
+);
+
 export const CashHandoverRoutes = router;
 export default router;

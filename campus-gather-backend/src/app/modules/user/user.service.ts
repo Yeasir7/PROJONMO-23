@@ -222,30 +222,32 @@ const updateFeeStatus = async (
     }
 
     if (existing.festFeeStatus === FestFeeStatus.PAID_TO_CR && data.festFeeStatus === "UNPAID" && existing.sectionId) {
-        const sectionUsers = await prisma.user.aggregate({
-            where: {
-                sectionId: existing.sectionId,
-                festFeeStatus: FestFeeStatus.PAID_TO_CR,
-                id: { not: existing.id },
-            },
-            _sum: { paidAmount: true },
-        });
-        const totalSectionCollectedAfter = sectionUsers._sum.paidAmount ?? 0;
+        if (requestingUser?.role !== Role.SUPER_ADMIN) {
+            const sectionUsers = await prisma.user.aggregate({
+                where: {
+                    sectionId: existing.sectionId,
+                    festFeeStatus: FestFeeStatus.PAID_TO_CR,
+                    id: { not: existing.id },
+                },
+                _sum: { paidAmount: true },
+            });
+            const totalSectionCollectedAfter = sectionUsers._sum.paidAmount ?? 0;
 
-        const handoverAgg = await prisma.cashHandover.aggregate({
-            where: {
-                sectionId: existing.sectionId,
-                status: { in: [HandoverStatus.PENDING, HandoverStatus.VERIFIED] },
-            },
-            _sum: { amount: true },
-        });
-        const totalHandedOver = handoverAgg._sum.amount ?? 0;
+            const handoverAgg = await prisma.cashHandover.aggregate({
+                where: {
+                    sectionId: existing.sectionId,
+                    status: { in: [HandoverStatus.PENDING, HandoverStatus.VERIFIED] },
+                },
+                _sum: { amount: true },
+            });
+            const totalHandedOver = handoverAgg._sum.amount ?? 0;
 
-        if (totalSectionCollectedAfter < totalHandedOver) {
-            throw new AppError(
-                status.BAD_REQUEST,
-                "Cannot mark student UNPAID because this cash has already been submitted in a CR handover."
-            );
+            if (totalSectionCollectedAfter < totalHandedOver) {
+                throw new AppError(
+                    status.BAD_REQUEST,
+                    "Cannot mark student UNPAID because this cash has already been submitted in a CR handover."
+                );
+            }
         }
     }
 
@@ -385,6 +387,53 @@ const updateMyProfile = async (userId: number, payload: IUpdateMyProfilePayload)
     return userWithoutPassword;
 };
 
+const resetStudentAccount = async (id: number) => {
+    const targetUser = await prisma.user.findUnique({ where: { id } });
+    if (!targetUser) {
+        throw new AppError(status.NOT_FOUND, "User not found");
+    }
+
+    if (targetUser.role === Role.SUPER_ADMIN) {
+        throw new AppError(status.FORBIDDEN, "Cannot reset a Super Admin account");
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        // 1. Find all segmentRegistration rows for user and increment seatsLeft by 1 on each Segment
+        const registrations = await tx.segmentRegistration.findMany({
+            where: { userId: targetUser.id },
+        });
+
+        for (const reg of registrations) {
+            await tx.segment.update({
+                where: { id: reg.segmentId },
+                data: {
+                    seatsLeft: { increment: 1 },
+                },
+            });
+        }
+
+        // 2. If user.studentId is present, update allowedStudent.isClaimed = false
+        if (targetUser.studentId) {
+            await tx.allowedStudent.updateMany({
+                where: { studentId: targetUser.studentId },
+                data: { isClaimed: false },
+            });
+        }
+
+        // 3. Delete the user
+        await tx.user.delete({
+            where: { id: targetUser.id },
+        });
+
+        return {
+            id: targetUser.id,
+            studentId: targetUser.studentId,
+            name: targetUser.name,
+            message: "Student account reset successfully",
+        };
+    });
+};
+
 export const UserService = {
     getMe,
     getAllUsers,
@@ -394,4 +443,5 @@ export const UserService = {
     whitelistStudent,
     updateKitStatus,
     updateMyProfile,
+    resetStudentAccount,
 };

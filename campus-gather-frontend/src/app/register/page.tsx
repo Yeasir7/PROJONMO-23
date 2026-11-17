@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import {
-  UserPlus,
   Search,
   CheckCircle2,
   Lock,
@@ -52,7 +52,6 @@ export default function RegisterPage() {
 
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     password: "",
     phone: "",
     sectionId: "",
@@ -114,45 +113,45 @@ export default function RegisterPage() {
     }
   };
 
-  // Step 2: Submit Registration
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const validateRegistrationForm = (): boolean => {
     if (!verifiedStudent) {
       toast.error("Please verify your 11-digit Student ID first.");
-      return;
-    }
-    if (!formData.name.trim()) {
-      toast.error("Full name is required.");
-      return;
-    }
-    if (!formData.email.trim() || !formData.email.includes("@")) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
-      return;
-    }
-    if (!formData.phone.trim()) {
-      toast.error("Phone number is required.");
-      return;
+      return false;
     }
     if (!formData.sectionId) {
       toast.error("Please select your academic section.");
+      return false;
+    }
+    if (!formData.phone.trim()) {
+      toast.error("Phone number is required.");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return false;
+    }
+    return true;
+  };
+
+  // Step 2: Submit Registration with Google OAuth
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    if (!validateRegistrationForm()) {
+      return;
+    }
+    if (!credentialResponse.credential) {
+      toast.error("Google authentication failed. No credential received.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await authApi.register({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        password: formData.password,
-        studentId: verifiedStudent.studentId,
-        phone: formData.phone.trim(),
+      const response = await authApi.googleRegister({
+        studentId: verifiedStudent!.studentId,
         sectionId: Number(formData.sectionId),
         tshirtSize: formData.tshirtSize,
+        phone: formData.phone.trim(),
+        password: formData.password,
+        credential: credentialResponse.credential,
       });
 
       if (response?.accessToken && typeof window !== "undefined") {
@@ -313,7 +312,7 @@ export default function RegisterPage() {
             </div>
 
             {/* ─── STEP 2: REGISTRATION FORM (LOCKED UNTIL VERIFIED) ───── */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               {!verifiedStudent && (
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-xs text-amber-800">
                   <Lock className="size-3.5 shrink-0 text-amber-600" />
@@ -336,55 +335,6 @@ export default function RegisterPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-email" className="text-xs font-semibold text-slate-700">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="reg-email"
-                    type="email"
-                    required
-                    disabled={!verifiedStudent}
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="student@example.com"
-                    className="h-10 border-slate-300 text-slate-900 focus:border-indigo-500 disabled:bg-slate-100"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-password" className="text-xs font-semibold text-slate-700">
-                    Password
-                  </Label>
-                  <Input
-                    id="reg-password"
-                    type="password"
-                    required
-                    minLength={6}
-                    disabled={!verifiedStudent}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="At least 6 characters"
-                    className="h-10 border-slate-300 text-slate-900 focus:border-indigo-500 disabled:bg-slate-100"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1.5">
-                  <Label htmlFor="reg-phone" className="text-xs font-semibold text-slate-700">
-                    Phone Number
-                  </Label>
-                  <Input
-                    id="reg-phone"
-                    type="tel"
-                    required
-                    disabled={!verifiedStudent}
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="01700000000"
-                    className="h-10 border-slate-300 text-slate-900 focus:border-indigo-500 disabled:bg-slate-100"
-                  />
-                </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="reg-section" className="text-xs font-semibold text-slate-700">
                     Academic Section (Semesters 1-8)
@@ -411,6 +361,42 @@ export default function RegisterPage() {
                     </select>
                   )}
                 </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="reg-phone" className="text-xs font-semibold text-slate-700">
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="reg-phone"
+                    type="tel"
+                    required
+                    disabled={!verifiedStudent}
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="01700000000"
+                    className="h-10 border-slate-300 text-slate-900 focus:border-indigo-500 disabled:bg-slate-100"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="reg-password" className="text-xs font-semibold text-slate-700">
+                  Create Password
+                </Label>
+                <Input
+                  id="reg-password"
+                  type="password"
+                  required
+                  minLength={6}
+                  disabled={!verifiedStudent}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="At least 6 characters"
+                  className="h-10 border-slate-300 text-slate-900 focus:border-indigo-500 disabled:bg-slate-100"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Set a password so you can log in later with either your Student ID or Google
+                </p>
               </div>
 
               <div>
@@ -441,24 +427,39 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting || !verifiedStudent}
-                className="w-full h-11 py-2.5 text-sm font-semibold gap-2 mt-3 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white shadow-md shadow-indigo-600/20 disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Completing Registration...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="size-4" />
-                    Complete Registration
-                  </>
+              <div className="pt-3 border-t border-slate-100 space-y-3">
+                <div className="text-center text-xs font-medium text-slate-600">
+                  Verify your identity with Google to complete registration:
+                </div>
+
+                <div
+                  className="w-full flex justify-center"
+                  onClickCapture={(e) => {
+                    if (!validateRegistrationForm()) {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() =>
+                      toast.error("Google authentication failed. Please try again.")
+                    }
+                    text="continue_with"
+                    shape="rectangular"
+                    size="large"
+                    width="100%"
+                  />
+                </div>
+
+                {isSubmitting && (
+                  <div className="flex items-center justify-center gap-2 text-xs text-indigo-600 font-medium py-1 animate-pulse">
+                    <div className="size-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    Registering your Fest Pass with Google...
+                  </div>
                 )}
-              </Button>
-            </form>
+              </div>
+            </div>
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
